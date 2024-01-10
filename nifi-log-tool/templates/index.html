@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NiFi Log Monitor</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #log-container {
+            height: 500px; 
+            overflow-y: auto; /* 超出高度的時候，自動顯示滾動條 */
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            white-space: pre-wrap; /* 保持內容格式 */
+        }
+        .error { color: red; }
+        .warn { color: orange; }
+        .info { color: green; }
+    </style>
+</head>
+<body>
+    <h1>NiFi Log Monitor</h1>
+    <button onclick="setLogFile('app')">Nifi App</button>
+    <button onclick="setLogFile('bootstrap')">Nifi Bootstrap</button>
+    <button onclick="setLogFile('deprecation')">Nifi Deprecation</button>
+    <button onclick="setLogFile('request')">Nifi Request</button>
+    <button onclick="setLogFile('user')">Nifi User</button>
+    <div id="log-container">
+        <!-- Display the log message -->
+    </div>
+    <script>
+        var currentLogFile = 'app'; // Default use app.log
+        function updateLogs() {
+            
+            $.getJSON('/get_logs',{log: currentLogFile}, function(data) {
+                var formattedLines = data.map(function(line) {
+                    // 將訊息類別分類 classify the message type，
+                    if (line.includes('ERROR')) return '<div class="error">' + line + '</div>';
+                    if (line.includes('WARN')) return '<div class="warn">' + line + '</div>';
+                    if (line.includes('DEBUG')) return '<div class="debug">' + line + '</div>';
+                    return '<div class="info">' + line + '</div>';
+                });
+                $('#log-container').html(formattedLines.join(''));
+
+            });
+        }
+        function setLogFile(logFile) {
+            currentLogFile = logFile;
+            updateLogs(currentLogFile); // updata log data
+        }
+        $(document).ready(function() {
+            setInterval(updateLogs, 5000); // per 5 sec update log data and display it
+        });
+    </script>
+</body>
+</html>
